@@ -1,0 +1,10 @@
+{
+  "name": "Worker Pool",
+  "description": "Distributed worker pool with cluster-aware scheduling and automatic failover",
+  "version": "1.0.0",
+  "author": "Muxcore-Media",
+  "kind": "scheduler",
+  "capabilities": ["worker.pool", "worker.executor", "worker.failover"],
+  "dependencies": [],
+  "homepage": "https://github.com/Muxcore-Media/worker-pool"
+}
