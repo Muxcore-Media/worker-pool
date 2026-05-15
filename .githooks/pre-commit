@@ -1,0 +1,33 @@
+#!/bin/bash
+# Pre-commit hook: format, lint, secrets scan, and test on changed Go files.
+set -e
+
+# Make sure Go tools are on PATH (git hooks run with limited env)
+export PATH="/usr/local/go/bin:$HOME/go/bin:$HOME/.local/bin:$PATH"
+
+# Only run if Go files changed
+changed=$(git diff --cached --name-only --diff-filter=ACM | grep '\.go$' || true)
+if [ -z "$changed" ]; then
+    exit 0
+fi
+
+echo "==> Formatting..."
+gofmt -w -s $changed
+git add $changed
+
+echo "==> Vet..."
+go vet ./... 2>&1 || true
+
+echo "==> Secrets scan (gitleaks)..."
+gitleaks protect --staged --no-banner --redact 2>&1 || {
+    echo ""
+    echo "ERROR: gitleaks detected secrets in staged files."
+    echo "Review the findings above, remove the secrets, and try again."
+    echo "If this is a false positive, run: git commit --no-verify"
+    exit 1
+}
+
+echo "==> Running tests..."
+go test -race -count=1 -timeout 60s ./... 2>&1
+
+echo "==> OK"
